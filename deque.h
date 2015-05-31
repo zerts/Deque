@@ -1,3 +1,5 @@
+#define _SCL_SECURE_NO_WARNINGS
+
 #include <cstdlib>
 #include <iterator>
 #include <cassert>
@@ -17,64 +19,83 @@ public:
     }
 };
 
-template <class currClass>
+template <class CurrClass>
 class Deque
 {
 private:
-    currClass * elements, *buf;
-    size_t elementsBegin, elementsEnd, elementsSize, memorySize;
+    CurrClass * elements, *buf;
+    size_t elementsBegin, elementsEnd, memorySize;
+public:
+    typedef CurrClass* iterator;
+    typedef const CurrClass* const_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef const std::reverse_iterator<iterator> const_reverse_iterator;
+
+    iterator begin()
+    {
+        return elements + elementsBegin;
+    }
+    iterator end()
+    {
+        return elements + elementsEnd;
+    }
+private:
     void copyArrayToBuf()
     {
-        for (size_t index = elementsBegin; index < elementsEnd; index++)
-            buf[index - elementsBegin] = elements[index];
+        std::copy(begin(), end(), buf);
     }
     void copyBufToArray()
     {
-        for (size_t index = 0u; index < elementsSize; index++)
-            elements[index + elementsBegin] = buf[index];
+        std::copy(buf, buf + (end() - begin()), begin());
     }
-    void changeMemorySize(bool flag)
+    void changeMemorySize(bool makeDequeBigger)
     {
-        buf = new currClass[elementsSize];
+        delete[] buf;
+        buf = new CurrClass[(end() - begin())];
         copyArrayToBuf();
-        if (flag)
+        if (makeDequeBigger)
             memorySize *= 3u;
         else
             memorySize /= 2u;
-        elements = new currClass[memorySize];
+        delete[] elements;
+        elements = new CurrClass[memorySize];
+        size_t currElementsSize = (end() - begin());
         elementsBegin = memorySize / 3u;
-        elementsEnd = elementsBegin + elementsSize;
+        elementsEnd = elementsBegin + currElementsSize;
         copyBufToArray();
-        buf = new currClass[1u];
+            delete[] buf;
+        buf = new CurrClass[1u];
     }
     void push()
     {
         if (elementsBegin <= 0u || elementsEnd >= memorySize)
             changeMemorySize(true);
-        elementsSize++;
     }
     void pop()
     {
-        elementsSize--;
-        if (elementsSize * 6u <= memorySize)
+        if ((end() - begin()) * 6u <= memorySize)
             changeMemorySize(false);
     }
 public:
     Deque()
     {
-        elements = new currClass[1];
+        elements = new CurrClass[1];
         elementsBegin = 0u;
-        elementsEnd = 1u;
-        elementsSize = 0u;
+        elementsEnd = 0u;
         memorySize = 1u;
     }
-    void pushFront(currClass key)
+    ~Deque()
+    {
+        delete[] buf;
+        delete[] elements;
+    }
+    void pushFront(CurrClass key)
     {
         push();
         elementsBegin--;
         elements[elementsBegin] = key;
     }
-    void pushBack(currClass key)
+    void pushBack(CurrClass key)
     {
         push();
         elements[elementsEnd] = key;
@@ -90,50 +111,41 @@ public:
         elementsEnd--;
         pop();
     }
-    currClass &operator[](size_t index)
+    CurrClass &operator[](size_t index)
     {
-        if (index < elementsSize)
+        if (index < (end() - begin()))
             return elements[elementsBegin + index];
         throw InvalidIndex(index);
     }
-    const currClass &operator[](size_t index) const
+    const CurrClass &operator[](size_t index) const
     {
         return elements[index];
     }
-    currClass &back()
+    CurrClass &back()
     {
         return elements[elementsEnd - 1u];
     }
-    const currClass &back() const
+    const CurrClass &back() const
     {
         return elements[elementsEnd - 1u];
     }
-    currClass &front()
+    CurrClass &front()
     {
         return elements[elementsBegin];
     }
-    const currClass &front() const
+    const CurrClass &front() const
     {
         return elements[elementsBegin];
     }
     bool empty() const
     {
-        return elementsSize == 0u;
+        return (end() - begin()) == 0u;
     }
     size_t size() const
     {
-        return elementsSize;
+        return (end() - begin());
     }
 
-    typedef currClass* iterator;
-    typedef const currClass* const_iterator;
-    typedef std::reverse_iterator<iterator> reverse_iterator;
-    typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-
-    iterator begin()
-    {
-        return elements + elementsBegin;
-    }
     iterator begin() const
     {
         return elements + elementsBegin;
@@ -143,10 +155,6 @@ public:
         return elements + elementsBegin;
     }
 
-    iterator end()
-    {
-        return elements + elementsEnd;
-    }
     iterator end() const
     {
         return elements + elementsEnd;
