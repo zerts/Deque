@@ -8,6 +8,8 @@
 
 std::default_random_engine generateRandom;
 
+const size_t MIN_NUMBER_OF_ELEMENTS = 10;
+
 using std::deque;
 
 enum TestType
@@ -23,10 +25,7 @@ enum TestType
     NUMBER_OF_TESTS
 };
 
-class DequeTest : public ::testing::TestWithParam<size_t>
-{
-
-};
+class DequeTest : public ::testing::TestWithParam<size_t>{};
 
 std::pair<size_t, size_t> getSegment(size_t size)
 {
@@ -77,6 +76,8 @@ TEST_P(DequeTest, AllTests)
     {
         int currKey;
         TestType currTest = static_cast<TestType> (queryGetter(generateRandom));
+        if (myDeque.size() < MIN_NUMBER_OF_ELEMENTS)
+            currTest = TestType::PUSH_BACK;
         std::pair<size_t, size_t> EndsOfSegment;
         switch (currTest)
         {
@@ -85,7 +86,7 @@ TEST_P(DequeTest, AllTests)
             myDeque.pushBack(currKey);
             standartDeque.push_back(currKey);
             ASSERT_EQ(myDeque.back(), currKey);
-            break; 
+            break;
         case POP_BACK:
             if (myDeque.size() > 0u)
             {
@@ -98,14 +99,14 @@ TEST_P(DequeTest, AllTests)
             myDeque.pushFront(currKey);
             standartDeque.push_front(currKey);
             ASSERT_EQ(myDeque.front(), currKey);
-            break; 
+            break;
         case POP_FRONT:
             if (myDeque.size() > 0u)
             {
                 myDeque.popFront();
                 standartDeque.pop_front();
             }
-            break; 
+            break;
         case SORT:
             if (myDeque.size() > 0u)
             {
@@ -113,7 +114,7 @@ TEST_P(DequeTest, AllTests)
                 std::sort(myDeque.begin() + EndsOfSegment.first, myDeque.begin() + EndsOfSegment.second);
                 std::sort(standartDeque.begin() + EndsOfSegment.first, standartDeque.begin() + EndsOfSegment.second);
             }
-            break; 
+            break;
         case REVERSE_SORT:
             if (myDeque.size() > 0u)
             {
@@ -121,7 +122,7 @@ TEST_P(DequeTest, AllTests)
                 std::sort(myDeque.rbegin() + EndsOfSegment.first, myDeque.rbegin() + EndsOfSegment.second);
                 std::sort(standartDeque.rbegin() + EndsOfSegment.first, standartDeque.rbegin() + EndsOfSegment.second);
             }
-            break; 
+            break;
         case REVERSE:
             if (myDeque.size() > 0u)
             {
@@ -129,7 +130,7 @@ TEST_P(DequeTest, AllTests)
                 std::reverse(myDeque.begin() + EndsOfSegment.first, myDeque.begin() + EndsOfSegment.second);
                 std::reverse(standartDeque.begin() + EndsOfSegment.first, standartDeque.begin() + EndsOfSegment.second);
             }
-            break; 
+            break;
         case EQUALITY_CHECK:
             if (myDeque.size() > 0u)
             {
@@ -139,7 +140,11 @@ TEST_P(DequeTest, AllTests)
             break;
         }
         ASSERT_EQ(myDeque.size(), standartDeque.size());
-
+        ASSERT_EQ(myDeque.front(), standartDeque.front());
+        ASSERT_EQ(myDeque.back(), standartDeque.back());
+        ASSERT_EQ(myDeque.empty(), standartDeque.empty());
+        for (size_t j = 0; j < myDeque.size(); j++)
+            ASSERT_EQ(myDeque[j], standartDeque[j]);
     }
     ASSERT_TRUE(std::equal(myDeque.crbegin(), myDeque.crend(), standartDeque.crbegin()));
 }
